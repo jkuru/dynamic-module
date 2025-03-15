@@ -1,0 +1,1 @@
+-keep class com.kuru.nextgen.plants.PlantsFeatureProvider { <init>(); }

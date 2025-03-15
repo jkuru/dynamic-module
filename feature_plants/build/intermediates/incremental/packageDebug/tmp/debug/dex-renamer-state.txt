@@ -1,0 +1,7 @@
+#Sat Mar 15 14:28:58 PDT 2025
+base.0=/Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/build/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
+base.1=/Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/build/intermediates/dex/debug/mergeProjectDexDebug/8/classes.dex
+path.0=0/classes.dex
+path.1=8/classes.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex

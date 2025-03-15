@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dist="http://schemas.android.com/apk/distribution"
+    featureSplit="feature_plants"
+    package="com.kuru.nextgen.plants"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk android:targetSdkVersion="31" />
+
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/plants" >
+        <dist:delivery>
+            <dist:on-demand />
+        </dist:delivery>
+
+        <dist:fusing dist:include="false" />
+    </dist:module>
+
+    <application
+        android:debuggable="true"
+        android:extractNativeLibs="false" >
+        <provider
+            android:name="com.kuru.nextgen.plants.PlantsFeatureProvider"
+            android:authorities="com.kuru.nextgen.plants.provider"
+            android:exported="false"
+            android:splitName="feature_plants" />
+    </application>
+
+</manifest>
