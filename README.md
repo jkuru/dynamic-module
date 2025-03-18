@@ -125,85 +125,7 @@ internal class DynamicFeatureManager private constructor(
 
 ### Sequence Diagram
 
-```mermaid
-sequenceDiagram
-    participant MainActivity
-    participant ModuleManager
-    participant DynamicFeatureManager
-    participant PlayCore
-    participant UI
-
-    Note over MainActivity,UI: Initialization Phase
-    MainActivity->>ModuleManager: getInstance(application)
-    ModuleManager->>DynamicFeatureManager: create instance
-    MainActivity->>ModuleManager: setActivity(activity)
-    MainActivity->>ModuleManager: setConfirmationLauncher(launcher)
-
-    Note over MainActivity,UI: Module Installation Flow
-    UI->>MainActivity: User requests feature
-    MainActivity->>ModuleManager: loadModule(moduleName)
-    
-    rect rgb(200, 220, 255)
-        Note over ModuleManager: Pre-installation Checks
-        ModuleManager->>ModuleManager: isModuleInstalled()
-        alt Module already installed
-            ModuleManager-->>UI: ModuleState.Loaded
-            return
-        end
-        
-        ModuleManager->>ModuleManager: isModuleCompatible()
-        alt Not compatible
-            ModuleManager-->>UI: ModuleState.Error
-            return
-        end
-        
-        ModuleManager->>ModuleManager: isPlayStoreAvailable()
-        alt Play Store not available
-            ModuleManager-->>UI: ModuleState.Error
-            return
-        end
-        
-        ModuleManager->>ModuleManager: retryWithBackoff()
-        alt No network
-            ModuleManager-->>UI: ModuleState.Error
-            return
-        end
-    end
-
-    rect rgb(220, 255, 220)
-        Note over ModuleManager: Installation Process
-        ModuleManager->>PlayCore: startInstall(request)
-        PlayCore-->>ModuleManager: sessionId
-        
-        loop Installation Progress
-            PlayCore->>ModuleManager: state updates
-            ModuleManager->>UI: ModuleState.LoadingProgress
-        end
-        
-        alt Installation Success
-            PlayCore->>ModuleManager: INSTALLED
-            ModuleManager->>UI: ModuleState.Loaded
-        else Installation Failed
-            PlayCore->>ModuleManager: FAILED
-            ModuleManager->>UI: ModuleState.Error
-        end
-    end
-
-    rect rgb(255, 220, 220)
-        Note over ModuleManager: Error Handling
-        alt ACCESS_DENIED
-            PlayCore->>ModuleManager: Error(-7)
-            ModuleManager->>PlayCore: deferredInstall()
-            ModuleManager->>UI: ModuleState.NeedsConfirmation
-            UI->>ModuleManager: handleUserConfirmation()
-            ModuleManager->>PlayCore: retryInstallation()
-        end
-    end
-
-    Note over MainActivity,UI: Cleanup
-    MainActivity->>ModuleManager: cleanup()
-    ModuleManager->>PlayCore: unregisterListener()
-```
+ Refer Article 
 
 ### Flow Description
 
@@ -320,23 +242,7 @@ ModuleState.NeedsConfirmation {
 
 ### Flow Example
 
-```mermaid
-sequenceDiagram
-    participant UI
-    participant MainActivity
-    participant ModuleManager
-    participant PlayCore
-
-    Note over UI,PlayCore: Installation Flow
-    UI->>MainActivity: Request feature installation
-    MainActivity->>ModuleManager: loadModule()
-    ModuleManager->>PlayCore: startInstall()
-    PlayCore-->>ModuleManager: Requires user confirmation
-    ModuleManager->>UI: Show confirmation dialog
-    UI->>MainActivity: User confirms
-    MainActivity->>ModuleManager: handleUserConfirmation()
-    ModuleManager->>PlayCore: retryInstallation()
-```
+Refer article 
 
 ### Error Handling
 
