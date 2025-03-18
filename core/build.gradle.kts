@@ -8,8 +8,8 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 26
-        targetSdk = 34
+        minSdk = 31
+
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -58,6 +58,11 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+    // Play Core dependencies
+    api(libs.feature.delivery)
+    api(libs.feature.delivery.ktx)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // Test dependencies
     testImplementation("junit:junit:4.13.2")

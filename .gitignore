@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+/core/build
+/feature-cars/build
+/feature-animals/build
+/feature_plants/build
+/feature-cars/build 2
+/keystore.properties

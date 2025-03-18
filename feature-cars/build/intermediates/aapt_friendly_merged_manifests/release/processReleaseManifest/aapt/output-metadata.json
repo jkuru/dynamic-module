@@ -5,7 +5,7 @@
     "kind": "Directory"
   },
   "applicationId": "com.kuru.nextgen.feature.cars",
-  "variantName": "debug",
+  "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",

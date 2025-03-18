@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -8,12 +11,18 @@ android {
     namespace = "com.kuru.nextgen"
     compileSdk = 34
 
+    val versionMajor = 26
+    val versionMinor = 1
+    val versionPatch = 0
+
+
     defaultConfig {
         applicationId = "com.kuru.nextgen"
         minSdk = 31
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+
+        versionCode = versionMajor
+        versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -21,7 +30,18 @@ android {
             useSupportLibrary = true
         }
     }
-
+    signingConfigs {
+        create("release") {
+            val propsFile = rootProject.file("keystore.properties")
+            val props = Properties().apply {
+                load(FileInputStream(propsFile))
+            }
+            storeFile = file(props["storeFile"] as String)
+            storePassword = props["storePassword"] as String
+            keyAlias = props["keyAlias"] as String
+            keyPassword = props["keyPassword"] as String
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -29,6 +49,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs["release"]
         }
     }
     compileOptions {
@@ -59,17 +80,17 @@ dependencies {
     implementation(project(":feature-animals"))
     implementation(project(":feature-cars"))
 
-    implementation("androidx.multidex:multidex:2.0.1")
+    implementation(libs.androidx.multidex)
     
-    implementation("androidx.core:core-ktx:1.12.0")
+    implementation(libs.androidx.core.ktx.v1120)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended)
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
@@ -77,14 +98,15 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
 
     // Play Core dependencies
-    api("com.google.android.play:feature-delivery:2.1.0")
-    api("com.google.android.play:feature-delivery-ktx:2.1.0")
+    api(libs.feature.delivery)
+    api(libs.feature.delivery.ktx)
+    implementation(libs.kotlinx.coroutines.play.services)  // Coroutine support for Tasks
 
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit.v115)
+    androidTestImplementation(libs.androidx.espresso.core.v351)
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

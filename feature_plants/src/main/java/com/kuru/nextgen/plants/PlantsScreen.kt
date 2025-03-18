@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.kuru.nextgen.core.util.FeatureScreenRegistry
 import com.kuru.nextgen.core.util.LogDisposableEffect
 import com.kuru.nextgen.core.util.LogEffect
 
@@ -39,6 +40,14 @@ fun PlantsScreen(navController: NavController) {
     val state by viewModel.state.collectAsState()
     val innerNavController = rememberNavController()
 
+    object  {
+        init {
+            FeatureScreenRegistry.register("plants") { navController ->
+                Log.e("Navigation", "Navigated to: PlantsScreen")
+                PlantsScreen(navController)
+            }
+        }
+    }
     LogDisposableEffect("PlantsScreen") {
         // Any cleanup needed
     }

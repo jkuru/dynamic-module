@@ -1,7 +1,0 @@
-com.kuru.nextgen.plants.feature_plants-pngs-0 /Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/build/generated/res/pngs/debug
-com.kuru.nextgen.plants.feature_plants-resValues-1 /Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/build/generated/res/resValues/debug
-com.kuru.nextgen.plants.feature_plants-packageDebugResources-2 /Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/build/intermediates/incremental/debug/packageDebugResources/merged.dir
-com.kuru.nextgen.plants.feature_plants-packageDebugResources-3 /Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
-com.kuru.nextgen.plants.feature_plants-debug-4 /Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/build/intermediates/merged_res/debug/mergeDebugResources
-com.kuru.nextgen.plants.feature_plants-debug-5 /Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/src/debug/res
-com.kuru.nextgen.plants.feature_plants-main-6 /Users/jerrykuru/Desktop/Projects/framework/Sample/feature_plants/src/main/res

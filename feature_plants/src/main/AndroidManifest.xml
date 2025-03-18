@@ -12,9 +12,5 @@
     </dist:module>
 
     <application>
-        <provider
-            android:name=".PlantsFeatureProvider"
-            android:authorities="com.kuru.nextgen.plants.provider"
-            android:exported="false" />
     </application>
 </manifest> 
