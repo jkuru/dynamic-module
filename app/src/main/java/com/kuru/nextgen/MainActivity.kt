@@ -33,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -43,35 +44,38 @@ import com.kuru.nextgen.core.util.FeatureScreenRegistry
 import com.kuru.nextgen.feature.animals.AnimalsScreen
 import com.kuru.nextgen.feature.cars.CarsScreen
 import kotlinx.coroutines.launch
+import com.kuru.nextgen.core.feature.FeatureManagers
 
 class MainActivity : ComponentActivity() {
-    private lateinit var moduleManager: ModuleManager
+    private lateinit var featureManagers: FeatureManagers
     private lateinit var confirmationLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     companion object {
-        const val PLANTS_MODULE = "plants"
+        const val PLANTS_MODULE = "feature_plants"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        moduleManager = ModuleManagerProvider.getInstance(application)
-        moduleManager.setActivity(this)
-        
+
+        // Get both managers
+        featureManagers = ModuleManagerProvider.getFeatureManagers(application)
+        featureManagers.regular.setActivity(this)
+
         confirmationLauncher = registerForActivityResult(
             ActivityResultContracts.StartIntentSenderForResult()
         ) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                moduleManager.handleUserConfirmation(PLANTS_MODULE)
+                featureManagers.regular.handleUserConfirmation(PLANTS_MODULE)
             }
         }
-        
-        moduleManager.setConfirmationLauncher(confirmationLauncher)
+
+        featureManagers.regular.setConfirmationLauncher(confirmationLauncher)
+
 
         setContent {
             MaterialTheme {
                 MainScreen(
-                    moduleManager = moduleManager
+                    moduleManager = featureManagers.regular
                 )
             }
         }
@@ -79,8 +83,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        moduleManager.setActivity(null)
-        moduleManager.cleanup()
+        ModuleManagerProvider.cleanup(this.application)
     }
 }
 
@@ -141,15 +144,18 @@ fun MainScreen(
                         }
                         LoadingScreen("Preparing to load Plants feature...")
                     }
+
                     ModuleState.Loading -> {
                         LoadingScreen("Loading Plants feature...")
                     }
+
                     is ModuleState.LoadingProgress -> {
                         LoadingScreen(
                             message = "Downloading Plants feature...",
                             progress = state.progress
                         )
                     }
+
                     ModuleState.Loaded -> {
                         FeatureScreenRegistry.getScreen("plants")?.invoke(navController) ?: run {
                             Box(
@@ -160,12 +166,14 @@ fun MainScreen(
                             }
                         }
                     }
+
                     is ModuleState.Error -> {
                         ErrorScreen(
                             message = state.message,
                             onRetry = { moduleManager.retryModuleLoad(MainActivity.PLANTS_MODULE) }
                         )
                     }
+
                     is ModuleState.NeedsConfirmation -> {
                         ConfirmationScreen(onConfirm = state.confirmationCallback)
                     }
@@ -200,6 +208,7 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
                 when {
                     message.contains("error code: -2") || message.contains("NETWORK_ERROR") ->
                         "No internet connection. Please check your network and try again."
+
                     else -> message
                 }
             )

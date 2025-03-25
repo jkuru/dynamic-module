@@ -11,7 +11,7 @@ android {
     namespace = "com.kuru.nextgen"
     compileSdk = 34
 
-    val versionMajor = 26
+    val versionMajor = 31
     val versionMinor = 1
     val versionPatch = 0
 
@@ -72,7 +72,9 @@ android {
     }
     
     // Configure base module for dynamic features
-    dynamicFeatures.addAll(setOf(":feature_plants"))
+   // dynamicFeatures.addAll(setOf(":feature_plants"))
+
+    setDynamicFeatures(setOf(":feature_plants"))
 }
 
 dependencies {

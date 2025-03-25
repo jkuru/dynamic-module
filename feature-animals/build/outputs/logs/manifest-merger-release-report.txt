@@ -1,16 +1,16 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml:2:13-83
-INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml:2:13-83
+ADDED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml:2:13-83
+INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml:2:13-83
 	package
-		INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml
+		INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml
 	xmlns:android
-		ADDED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml:2:23-81
+		ADDED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml:2:23-81
 uses-sdk
-INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml reason: use-sdk injection requested
-INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml
-INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml
+INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml reason: use-sdk injection requested
+INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml
+INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml
 	android:targetSdkVersion
-		INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml
+		INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml
 	android:minSdkVersion
-		INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest13855294220365279925.xml
+		INJECTED from /Users/jerrykuru/Desktop/Projects/framework/Sample/feature-animals/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4231648670446015228.xml

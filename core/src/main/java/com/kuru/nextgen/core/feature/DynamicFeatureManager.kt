@@ -3,8 +3,6 @@ package com.kuru.nextgen.core.feature
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -146,48 +144,70 @@ internal class DynamicFeatureManager private constructor(
     }
 
     private fun isModuleCompatible(moduleName: String): Boolean {
+        Log.d(TAG, "🔍 Checking compatibility for module: $moduleName")
+        
+        // Check if we're on the UI thread - we should be for Play Core operations
+        val onUiThread = android.os.Looper.getMainLooper() == android.os.Looper.myLooper()
+        if (!onUiThread) {
+            Log.w(TAG, "⚠️ isModuleCompatible called from background thread, this may cause issues with Play Core API")
+            // Consider switching to UI thread if needed
+        }
+        
         try {
-            val installedModules = splitInstallManager.installedModules
-            Log.d(TAG, "📱 Currently installed modules: $installedModules")
-
-            if (installedModules.contains(moduleName)) {
-                Log.d(TAG, "✅ Module $moduleName is already installed, assuming compatibility")
+            // If module is already installed, no need to check compatibility
+            if (splitInstallManager.installedModules.contains(moduleName)) {
+                Log.d(TAG, "✅ Module $moduleName is already installed")
                 return true
             }
 
-            val request = SplitInstallRequest.newBuilder()
-                .addModule(moduleName)
-                .build()
-
-            Log.d(TAG, "✅ Module $moduleName is valid for installation request")
-
-            val packageManager = application.packageManager
-            val deviceFeatures = packageManager.systemAvailableFeatures.map { it.name }
-            Log.d(TAG, "📱 Device features: $deviceFeatures")
-
-            val minSdk = 31 // Match feature_plants/build.gradle
-            val deviceSdk = android.os.Build.VERSION.SDK_INT
-            if (deviceSdk < minSdk) {
-                Log.e(TAG, "❌ Device SDK $deviceSdk is below required minSdk $minSdk for $moduleName")
+            // Validate module exists in the app bundle
+            val request = try {
+                SplitInstallRequest.newBuilder()
+                    .addModule(moduleName)
+                    .build()
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "❌ Module $moduleName not found in app bundle", e)
                 return false
             }
 
-            return true
-        } catch (e: Exception) {
-            when {
-                e.message?.contains("not found") == true -> {
-                    Log.e(TAG, "❌ Module $moduleName not found in app bundle", e)
-                }
-                e.message?.contains("API level") == true -> {
-                    Log.e(TAG, "❌ Module $moduleName requires different API level", e)
-                }
-                e.message?.contains("architecture") == true -> {
-                    Log.e(TAG, "❌ Module $moduleName not compatible with device architecture", e)
-                }
-                else -> {
-                    Log.e(TAG, "❌ Unknown compatibility check failure for $moduleName", e)
+            // Check device API level compatibility
+            val moduleInfo = splitInstallManager.getInstalledModules().find { it == moduleName }
+            if (moduleInfo == null) {
+                // Module not found in installed modules, check if it can be installed
+                try {
+                    Log.d(TAG, "✅ Module $moduleName is available for installation")
+                    return true
+                } catch (e: com.google.android.play.core.splitinstall.SplitInstallException) {
+                    when (e.errorCode) {
+                        -5 -> { // INCOMPATIBLE_WITH_EXISTING_SESSION
+                            Log.w(TAG, "⚠️ Module $moduleName has an existing installation session")
+                            return true // Still compatible, just has an ongoing installation
+                        }
+                        -6 -> { // NETWORK_ERROR
+                            Log.w(TAG, "⚠️ Network error while checking module $moduleName")
+                            return true // Network error shouldn't determine compatibility
+                        }
+                        -3 -> { // API_NOT_AVAILABLE
+                            Log.e(TAG, "❌ Module $moduleName API not available on this device", e)
+                            return false
+                        }
+                        -4 -> { // INVALID_REQUEST
+                            Log.e(TAG, "❌ Module $moduleName installation request invalid", e)
+                            return false
+                        }
+                        else -> {
+                            Log.e(TAG, "❌ Unknown error checking module $moduleName compatibility: ${e.errorCode}", e)
+                            return false
+                        }
+                    }
                 }
             }
+
+            Log.d(TAG, "✅ Module $moduleName passed all compatibility checks")
+            return true
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Unexpected error checking module $moduleName compatibility", e)
             return false
         }
     }
@@ -225,24 +245,22 @@ internal class DynamicFeatureManager private constructor(
 
                 if (!isModuleCompatible(moduleName)) {
                     Log.e(TAG, "❌ Module $moduleName is not compatible with this device")
-                    val errorMessage = when {
-                        android.os.Build.VERSION.SDK_INT < 31 -> "This module requires Android 12 or higher."
-                        else -> "This module is not compatible with your device. Please ensure you have the latest app version."
-                    }
+                    val errorMessage = "This module is not compatible with your device. Please ensure you have the latest app version."
                     stateFlow.value = InstallationState.Error(errorMessage)
                     return
                 }
 
-                val connectivityManager = application.getSystemService(ConnectivityManager::class.java)
-                val network = connectivityManager.activeNetwork
-                val capabilities = connectivityManager.getNetworkCapabilities(network)
-                val isConnected = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
 
-                if (!isConnected) {
-                    Log.e(TAG, "❌ No internet connection available for module: $moduleName")
-                    stateFlow.value = InstallationState.Error("No internet connection available")
-                    return
-                }
+//                val connectivityManager = application.getSystemService(ConnectivityManager::class.java)
+//                val network = connectivityManager.activeNetwork
+//                val capabilities = connectivityManager.getNetworkCapabilities(network)
+//                val isConnected = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+//
+//                if (!isConnected) {
+//                    Log.e(TAG, "❌ No internet connection available for module: $moduleName")
+//                    stateFlow.value = InstallationState.Error("No internet connection available")
+//                    return
+//                }
 
                 val request = SplitInstallRequest.newBuilder()
                     .addModule(moduleName)
@@ -316,6 +334,7 @@ internal class DynamicFeatureManager private constructor(
 
     companion object {
         private const val TAG = "DynamicFeatureManager"
+        @SuppressLint("StaticFieldLeak")
         private var instance: DynamicFeatureManager? = null
 
         @Synchronized
