@@ -1,12 +1,10 @@
 package com.kuru.nextgen
 
-import android.app.Activity
+import android.app.Application
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocalFlorist
 import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,75 +23,51 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.kuru.nextgen.core.feature.ModuleManager
-import com.kuru.nextgen.core.feature.ModuleManagerProvider
-import com.kuru.nextgen.core.feature.ModuleState
+import com.kuru.nextgen.NextGenApplication.Companion.PLANTS_MODULE
+import com.kuru.nextgen.core.feature.DeferredDynamicFeatureManager
+import com.kuru.nextgen.core.feature.DynamicFeatureManagerV1
+import com.kuru.nextgen.core.feature.FeatureRegistry
+import com.kuru.nextgen.core.feature.ModuleStateV1
 import com.kuru.nextgen.core.util.FeatureScreenRegistry
 import com.kuru.nextgen.feature.animals.AnimalsScreen
 import com.kuru.nextgen.feature.cars.CarsScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import com.kuru.nextgen.core.feature.FeatureManagers
 
 class MainActivity : ComponentActivity() {
-    private lateinit var featureManagers: FeatureManagers
-    private lateinit var confirmationLauncher: ActivityResultLauncher<IntentSenderRequest>
-
-    companion object {
-        const val PLANTS_MODULE = "feature_plants"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         super.onCreate(savedInstanceState)
-
-        // Get both managers
-        featureManagers = ModuleManagerProvider.getFeatureManagers(application)
-        featureManagers.regular.setActivity(this)
-
-        confirmationLauncher = registerForActivityResult(
-            ActivityResultContracts.StartIntentSenderForResult()
-        ) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                featureManagers.regular.handleUserConfirmation(PLANTS_MODULE)
-            }
-        }
-
-        featureManagers.regular.setConfirmationLauncher(confirmationLauncher)
-
-
+        val featureManager = DynamicFeatureManagerV1.getInstance(application)
+        featureManager.setActivity(this)
         setContent {
             MaterialTheme {
-                MainScreen(
-                    moduleManager = featureManagers.regular
-                )
+                MainScreen(featureManager)
             }
         }
-    }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        ModuleManagerProvider.cleanup(this.application)
+        scope.launch {
+            Log.d("NextGenApplication", "deferredDynamicFeatureManager started")
+            featureManager.loadModule(PLANTS_MODULE)
+        }
     }
 }
 
 @Composable
 fun MainScreen(
-    moduleManager: ModuleManager
+    featureManager: DynamicFeatureManagerV1
 ) {
     val navController = rememberNavController()
-    val moduleState by moduleManager.getModuleState(MainActivity.PLANTS_MODULE)
-        .collectAsState(initial = ModuleState.NotLoaded)
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         bottomBar = {
@@ -116,9 +89,6 @@ fun MainScreen(
                     label = { Text("Plants") },
                     selected = navController.currentDestination?.route == "plants",
                     onClick = {
-                        scope.launch {
-                            moduleManager.loadModule(MainActivity.PLANTS_MODULE)
-                        }
                         navController.navigate("plants")
                     }
                 )
@@ -137,47 +107,27 @@ fun MainScreen(
                 CarsScreen(navController)
             }
             composable("plants") {
-                when (val state = moduleState) {
-                    ModuleState.NotLoaded -> {
-                        LaunchedEffect(Unit) {
-                            moduleManager.loadModule(MainActivity.PLANTS_MODULE)
-                        }
-                        LoadingScreen("Preparing to load Plants feature...")
-                    }
-
-                    ModuleState.Loading -> {
-                        LoadingScreen("Loading Plants feature...")
-                    }
-
-                    is ModuleState.LoadingProgress -> {
-                        LoadingScreen(
-                            message = "Downloading Plants feature...",
-                            progress = state.progress
-                        )
-                    }
-
-                    ModuleState.Loaded -> {
-                        FeatureScreenRegistry.getScreen("plants")?.invoke(navController) ?: run {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Plants feature is installed but screen not found")
-                            }
+                if (featureManager.isModuleInstalled(PLANTS_MODULE)) {
+                    LoadingScreen("Module is installed!...")
+                    loadPlantsFeature()
+                    FeatureRegistry.initializeAll()
+                    FeatureScreenRegistry.getScreen("plants")?.invoke(navController) ?: run {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Plants feature is installed but screen not found")
                         }
                     }
-
-                    is ModuleState.Error -> {
-                        ErrorScreen(
-                            message = state.message,
-                            onRetry = { moduleManager.retryModuleLoad(MainActivity.PLANTS_MODULE) }
-                        )
-                    }
-
-                    is ModuleState.NeedsConfirmation -> {
-                        ConfirmationScreen(onConfirm = state.confirmationCallback)
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Plants feature is being prepared and will be available soon")
                     }
                 }
+
             }
         }
     }
@@ -201,37 +151,27 @@ private fun LoadingScreen(message: String, progress: Float? = null) {
 }
 
 @Composable
-private fun ErrorScreen(message: String, onRetry: () -> Unit) {
+private fun ErrorScreen(messageVal: String) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                when {
-                    message.contains("error code: -2") || message.contains("NETWORK_ERROR") ->
-                        "No internet connection. Please check your network and try again."
-
-                    else -> message
-                }
-            )
+            Text(messageVal)
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
         }
     }
 }
 
-@Composable
-private fun ConfirmationScreen(onConfirm: () -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Additional storage space is required")
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onConfirm) {
-                Text("Continue Installation")
-            }
-        }
+
+fun loadPlantsFeature() {
+    try {
+        val clazz = Class.forName("com.kuru.nextgen.plants.PlantsFeature")
+        // Accessing the class will trigger the init block
+        val instance = clazz.getDeclaredField("INSTANCE").get(null) // If PlantsFeature is an object
+        Log.d("loadPlantsFeature", "PlantsFeature loaded successfully")
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Log.d("loadPlantsFeature", "Failed to load PlantsFeature: ${e.message}")
     }
+
+    FeatureRegistry.initializeAll()
+
 }

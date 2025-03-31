@@ -11,16 +11,14 @@ android {
     namespace = "com.kuru.nextgen"
     compileSdk = 34
 
-    val versionMajor = 31
+    val versionMajor = 40
     val versionMinor = 1
     val versionPatch = 0
-
 
     defaultConfig {
         applicationId = "com.kuru.nextgen"
         minSdk = 31
         targetSdk = 34
-
         versionCode = versionMajor
         versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
         multiDexEnabled = true
@@ -30,6 +28,7 @@ android {
             useSupportLibrary = true
         }
     }
+
     signingConfigs {
         create("release") {
             val propsFile = rootProject.file("keystore.properties")
@@ -42,39 +41,66 @@ android {
             keyPassword = props["keyPassword"] as String
         }
     }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs["release"]
+            signingConfig = signingConfigs.getByName("release")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
     }
+
     buildFeatures {
         compose = true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    
-    // Configure base module for dynamic features
-   // dynamicFeatures.addAll(setOf(":feature_plants"))
 
-    setDynamicFeatures(setOf(":feature_plants"))
+
+    bundle {
+        language {
+            // This property is set to true by default.
+            // You can specify `false` to turn off
+            // generating configuration APKs for language resources.
+            // These resources are instead packaged with each base and
+            // feature APK.
+            // Continue reading below to learn about situations when an app
+            // might change setting to `false`, otherwise consider leaving
+            // the default on for more optimized downloads.
+            enableSplit = false
+        }
+        density {
+            // This property is set to true by default.
+            enableSplit = true
+        }
+        abi {
+            // This property is set to true by default.
+            enableSplit = true
+        }
+    }
+
+    dynamicFeatures.add(":feature_plants")
 }
 
 dependencies {
@@ -83,7 +109,7 @@ dependencies {
     implementation(project(":feature-cars"))
 
     implementation(libs.androidx.multidex)
-    
+
     implementation(libs.androidx.core.ktx.v1120)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -96,13 +122,12 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-    // Material Design
     implementation("com.google.android.material:material:1.11.0")
 
     // Play Core dependencies
-    api(libs.feature.delivery)
-    api(libs.feature.delivery.ktx)
-    implementation(libs.kotlinx.coroutines.play.services)  // Coroutine support for Tasks
+     api(libs.feature.delivery)
+     api(libs.feature.delivery.ktx)
+     implementation(libs.kotlinx.coroutines.play.services)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit.v115)

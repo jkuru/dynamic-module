@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.tasks.await
+
 
 internal class DynamicFeatureManager private constructor(
     private val application: Application
@@ -171,7 +171,7 @@ internal class DynamicFeatureManager private constructor(
             }
 
             // Check device API level compatibility
-            val moduleInfo = splitInstallManager.getInstalledModules().find { it == moduleName }
+            val moduleInfo = splitInstallManager.installedModules.find { it == moduleName }
             if (moduleInfo == null) {
                 // Module not found in installed modules, check if it can be installed
                 try {
@@ -212,7 +212,7 @@ internal class DynamicFeatureManager private constructor(
         }
     }
 
-    @SuppressLint("MissingPermission")
+
     override suspend fun loadModule(moduleName: String) {
         Log.d(TAG, "📥 Starting load process for module: $moduleName")
         mutex.withLock {
@@ -272,7 +272,7 @@ internal class DynamicFeatureManager private constructor(
                 val deferredTask = splitInstallManager.startInstall(request)
                 try {
                     Log.d(TAG, "⏳ Waiting for Play Store service binding...")
-                    val sessionId = deferredTask.await()
+                    val sessionId = deferredTask.result
                     Log.d(TAG, "📍 Mapping sessionId $sessionId to module $moduleName")
                     sessionMap[sessionId] = moduleName
                     Log.d(TAG, "✨ Started installation with sessionId: $sessionId for module: $moduleName")
