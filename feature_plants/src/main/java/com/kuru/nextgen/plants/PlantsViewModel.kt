@@ -20,7 +20,6 @@ class PlantsViewModel : ViewModel() {
             _state.value = _state.value.copy(isLoading = true)
             try {
                 // Simulate network call
-                Thread.sleep(1000)
                 val plants = listOf(
                     Plant(
                         id = 1,
