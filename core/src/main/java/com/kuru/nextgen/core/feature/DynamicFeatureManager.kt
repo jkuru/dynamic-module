@@ -89,7 +89,7 @@ class DynamicFeatureManager private constructor(
     }
 
     override suspend fun loadModule(moduleName: String) {
-        Log.e(TAG, "📱  loadModule moduleName = $moduleName ")
+        Log.d(TAG, "📱  loadModule moduleName = $moduleName ")
         mutex.withLock {
             if (isModuleInstalled(moduleName)) return
 
@@ -98,12 +98,12 @@ class DynamicFeatureManager private constructor(
             }
 
             stateFlow.value = ModuleState.Loading
-            Log.e(TAG, "📱  loadModule isModuleInstalled = false ")
+            Log.d(TAG, "📱  loadModule isModuleInstalled = false ")
             try {
                 val request = SplitInstallRequest.newBuilder()
                     .addModule(moduleName)
                     .build()
-                Log.e(TAG, "📱  loadModule manager.startInstall(request)")
+                Log.d(TAG, "📱  loadModule manager.startInstall(request)")
                 manager.startInstall(request)
             } catch (e: Exception) {
                 Log.e(TAG, "📱  loadModule Exception $e")
@@ -113,12 +113,12 @@ class DynamicFeatureManager private constructor(
     }
 
     override fun retryModuleLoad(moduleName: String) {
-        Log.e(TAG, "📱  retryModuleLoad ")
+        Log.d(TAG, "📱  retryModuleLoad =  $moduleName")
         scope.launch { loadModule(moduleName) }
     }
 
     override fun cleanup() {
-        Log.e(TAG, "📱  cleanup ")
+        Log.d(TAG, "📱  cleanup unregisterListener ")
         scope.cancel()
         manager.unregisterListener(listener)
     }
@@ -127,7 +127,7 @@ class DynamicFeatureManager private constructor(
         currentActivity = activity
     }
 
-    fun loadPlantsFeature() {
+    private fun loadPlantsFeature() {
         try {
             val clazz = Class.forName("com.kuru.nextgen.plants.PlantsFeature")
             // Accessing the class will trigger the init block
@@ -150,7 +150,7 @@ class DynamicFeatureManager private constructor(
         private var instance: DynamicFeatureManager? = null
 
         fun getInstance(application: Application): DynamicFeatureManager {
-            Log.e(TAG, "📱 Getting DynamicFeatureManager instance")
+            Log.d(TAG, "📱 Getting DynamicFeatureManager instance")
             return instance ?: synchronized(this) {
                 instance ?: DynamicFeatureManager(application).also { instance = it }
             }
