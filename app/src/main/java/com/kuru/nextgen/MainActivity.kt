@@ -110,7 +110,6 @@ fun MainScreen(
                 if (featureManager.isModuleInstalled(PLANTS_MODULE)) {
                     LoadingScreen("Module is installed!...")
                     loadPlantsFeature()
-                    FeatureRegistry.initializeAll()
                     FeatureScreenRegistry.getScreen("plants")?.invoke(navController) ?: run {
                         Box(
                             modifier = Modifier.fillMaxSize(),
