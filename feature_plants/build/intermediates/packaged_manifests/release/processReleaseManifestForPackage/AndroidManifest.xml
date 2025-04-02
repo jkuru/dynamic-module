@@ -3,8 +3,8 @@
     xmlns:dist="http://schemas.android.com/apk/distribution"
     featureSplit="feature_plants"
     package="com.kuru.nextgen"
-    android:versionCode="44"
-    android:versionName="44.4.0" >
+    android:versionCode="47"
+    android:versionName="47.7.0" >
 
     <uses-sdk
         android:minSdkVersion="31"

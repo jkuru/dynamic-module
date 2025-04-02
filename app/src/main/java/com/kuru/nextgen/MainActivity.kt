@@ -1,6 +1,7 @@
 package com.kuru.nextgen
 
-import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -23,7 +24,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,10 +31,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kuru.nextgen.NextGenApplication.Companion.PLANTS_MODULE
-import com.kuru.nextgen.core.feature.DeferredDynamicFeatureManager
-import com.kuru.nextgen.core.feature.DynamicFeatureManagerV1
+import com.kuru.nextgen.NextGenApplication.Companion.TAG
+import com.kuru.nextgen.core.feature.DynamicFeatureManager
 import com.kuru.nextgen.core.feature.FeatureRegistry
-import com.kuru.nextgen.core.feature.ModuleStateV1
 import com.kuru.nextgen.core.util.FeatureScreenRegistry
 import com.kuru.nextgen.feature.animals.AnimalsScreen
 import com.kuru.nextgen.feature.cars.CarsScreen
@@ -43,12 +42,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
+
 class MainActivity : ComponentActivity() {
 
+    private val prefs: SharedPreferences by lazy { getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     override fun onCreate(savedInstanceState: Bundle?) {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         super.onCreate(savedInstanceState)
-        val featureManager = DynamicFeatureManagerV1.getInstance(application)
+        val isFeatureInitialized = prefs.getBoolean("isFeatureInitialized", false)
+        val featureManager = DynamicFeatureManager.getInstance(application)
         featureManager.setActivity(this)
         setContent {
             MaterialTheme {
@@ -57,15 +59,26 @@ class MainActivity : ComponentActivity() {
         }
 
         scope.launch {
-            Log.d("NextGenApplication", "deferredDynamicFeatureManager started")
-            featureManager.loadModule(PLANTS_MODULE)
+            Log.d(TAG, "DynamicFeatureManager started")
+            if (!featureManager.isModuleInstalled(PLANTS_MODULE)) {
+                // Module isn’t installed: load it and initialize the feature
+                Log.d(TAG, "Loading plants module")
+                prefs.edit().putBoolean("isFeatureInitialized",false).apply()
+                featureManager.loadModule(PLANTS_MODULE)
+            } else if (!isFeatureInitialized) {
+                // Module is installed, but feature isn’t initialized: initialize it
+                Log.d(TAG, "Module already installed, initializing failed")
+            } else {
+                // Module is installed and feature is initialized: do nothing
+                Log.d(TAG, "Module already installed and feature initialized")
+            }
         }
     }
 }
 
 @Composable
 fun MainScreen(
-    featureManager: DynamicFeatureManagerV1
+    featureManager: DynamicFeatureManager
 ) {
     val navController = rememberNavController()
 
@@ -109,7 +122,6 @@ fun MainScreen(
             composable("plants") {
                 if (featureManager.isModuleInstalled(PLANTS_MODULE)) {
                     LoadingScreen("Module is installed!...")
-                    loadPlantsFeature()
                     FeatureScreenRegistry.getScreen("plants")?.invoke(navController) ?: run {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -160,16 +172,3 @@ private fun ErrorScreen(messageVal: String) {
 }
 
 
-fun loadPlantsFeature() {
-    try {
-        val clazz = Class.forName("com.kuru.nextgen.plants.PlantsFeature")
-        // Accessing the class will trigger the init block
-        val instance = clazz.getDeclaredField("INSTANCE").get(null) // If PlantsFeature is an object
-        Log.d("loadPlantsFeature", "PlantsFeature loaded successfully")
-    } catch (e: Exception) {
-        Log.d("loadPlantsFeature", "Failed to load PlantsFeature: ${e.message}",e)
-    }
-
-    FeatureRegistry.initializeAll()
-
-}

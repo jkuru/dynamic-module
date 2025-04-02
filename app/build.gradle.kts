@@ -11,8 +11,8 @@ android {
     namespace = "com.kuru.nextgen"
     compileSdk = 34
 
-    val versionMajor = 44
-    val versionMinor = 4
+    val versionMajor = 47
+    val versionMinor = 7
     val versionPatch = 0
 
     defaultConfig {

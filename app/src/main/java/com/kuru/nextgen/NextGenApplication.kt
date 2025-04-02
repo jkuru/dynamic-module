@@ -16,5 +16,6 @@ class NextGenApplication : Application() {
 
     companion object {
         const val PLANTS_MODULE = "feature_plants"
+        const  val TAG = "DynamicFeatureManager"
     }
 }

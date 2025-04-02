@@ -10,13 +10,15 @@ interface FeatureInitializer {
 // In :app (e.g., com.kuru.nextgen.core.util)
 object FeatureRegistry {
     private val initializers = mutableListOf<FeatureInitializer>()
+    private const val TAG = "DynamicFeatureManager"
 
     fun registerInitializer(initializer: FeatureInitializer) {
-        Log.d("FeatureRegistry",initializer.toString())
+        Log.d(TAG,"FeatureRegistry --> registerInitializer ")
         initializers.add(initializer)
     }
 
     fun initializeAll() {
+        Log.d(TAG,"FeatureRegistry --> initializeAll ")
         initializers.forEach { it.initialize() }
     }
 }

@@ -6,9 +6,10 @@ import androidx.navigation.NavController
 
 object FeatureScreenRegistry {
     private val screens = mutableMapOf<String, @Composable (NavController) -> Unit>()
+    private const val TAG = "DynamicFeatureManager"
 
     fun register(route: String, screen: @Composable (NavController) -> Unit) {
-        Log.d("FeatureScreenRegistry"," register $route")
+        Log.d(TAG,"FeatureScreenRegistry  register $route")
         screens[route] = screen
     }
 

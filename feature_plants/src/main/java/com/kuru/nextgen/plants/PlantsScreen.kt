@@ -29,28 +29,28 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.kuru.nextgen.core.util.FeatureScreenRegistry
 import com.kuru.nextgen.core.util.LogDisposableEffect
+import com.kuru.nextgen.core.util.LogEffect
 
 
 @Composable
 fun PlantsScreen(navController: NavController) {
+    val TAG = "DynamicFeatureManager"
     val viewModel = remember { PlantsViewModel() }
     val state by viewModel.state.collectAsState()
     val innerNavController = rememberNavController()
 
-    LaunchedEffect(Unit) {
-        Log.d("loadPlantsFeature", "PlantsScreen LaunchedEffect  successfully")
-    }
+    LogEffect(TAG, " PlantsScreen LaunchedEffect  successfully")
+
     LogDisposableEffect("PlantsScreen") {
         // Any cleanup needed
-        Log.d("loadPlantsFeature", "PlantsScreen LogDisposableEffect  successfully")
+        Log.d(TAG, "PlantsScreen LogDisposableEffect  successfully")
     }
 
     // Add navigation destination change listener
     DisposableEffect(innerNavController) {
         val listener = NavController.OnDestinationChangedListener { _, destination, arguments ->
-            Log.d("Navigation", "Navigated to: ${destination.route}")
+            Log.d(TAG, "Navigated to: ${destination.route}")
             when (destination.route) {
                 "plants_list" -> {
                     viewModel.handleIntent(PlantsIntent.NavigateBack)
@@ -87,7 +87,7 @@ fun PlantsScreen(navController: NavController) {
                 PlantDetailScreen(
                     state = state,
                     onIntent = viewModel::handleIntent,
-                    onNavigateBack = { 
+                    onNavigateBack = {
                         if (innerNavController.previousBackStackEntry != null) {
                             innerNavController.navigateUp()
                         } else {
@@ -106,8 +106,9 @@ fun PlantsListScreen(
     onIntent: (PlantsIntent) -> Unit,
     onNavigateToDetail: (Int) -> Unit
 ) {
+    val TAG = "DynamicFeatureManager"
+    LogEffect(TAG, " PlantsListScreen LaunchedEffect ")
     LaunchedEffect(Unit) {
-        Log.d("PlantsListScreen", "Loading plants")
         onIntent(PlantsIntent.LoadPlants)
     }
     when {
@@ -173,10 +174,9 @@ fun PlantDetailScreen(
     onIntent: (PlantsIntent) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        Log.d("PlantDetailScreen", "Loading Detail")
+    val TAG = "DynamicFeatureManager"
+    LogEffect(TAG, " PlantDetailScreen LaunchedEffect ")
 
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
