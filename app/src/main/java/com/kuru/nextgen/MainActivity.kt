@@ -168,8 +168,7 @@ fun loadPlantsFeature() {
         val instance = clazz.getDeclaredField("INSTANCE").get(null) // If PlantsFeature is an object
         Log.d("loadPlantsFeature", "PlantsFeature loaded successfully")
     } catch (e: Exception) {
-        e.printStackTrace()
-        Log.d("loadPlantsFeature", "Failed to load PlantsFeature: ${e.message}")
+        Log.d("loadPlantsFeature", "Failed to load PlantsFeature: ${e.message}",e)
     }
 
     FeatureRegistry.initializeAll()

@@ -39,8 +39,12 @@ fun PlantsScreen(navController: NavController) {
     val state by viewModel.state.collectAsState()
     val innerNavController = rememberNavController()
 
+    LaunchedEffect(Unit) {
+        Log.d("loadPlantsFeature", "PlantsScreen LaunchedEffect  successfully")
+    }
     LogDisposableEffect("PlantsScreen") {
         // Any cleanup needed
+        Log.d("loadPlantsFeature", "PlantsScreen LogDisposableEffect  successfully")
     }
 
     // Add navigation destination change listener

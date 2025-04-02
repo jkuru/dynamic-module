@@ -11,8 +11,8 @@ android {
     namespace = "com.kuru.nextgen"
     compileSdk = 34
 
-    val versionMajor = 40
-    val versionMinor = 1
+    val versionMajor = 44
+    val versionMinor = 4
     val versionPatch = 0
 
     defaultConfig {
@@ -47,7 +47,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
+            //    getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")

@@ -21,3 +21,4 @@
 #-renamesourcefileattribute SourceFile
 -keep class com.google.android.play.core.** { *; }
 -keep class com.google.android.play.core.internal.** { *; }
+-keep class com.kuru.nextgen.plants.** { *; }

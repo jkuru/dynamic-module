@@ -10,13 +10,13 @@ android {
 
     defaultConfig {
         minSdk = 31
-        missingDimensionStrategy("store", "play")
+ //       missingDimensionStrategy("store", "play")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-
+            proguardFiles("proguard-rules.pro")
         }
     }
 
