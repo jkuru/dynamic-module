@@ -13,7 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
-/keystore.properties
+keystore.properties
 /core/build
 /feature-cars/build
 /feature-animals/build
