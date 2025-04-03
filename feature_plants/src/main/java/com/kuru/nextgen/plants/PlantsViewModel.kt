@@ -19,7 +19,6 @@ class PlantsViewModel : ViewModel() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
-                // Simulate network call
                 val plants = listOf(
                     Plant(
                         id = 1,

@@ -2,7 +2,6 @@ package com.kuru.nextgen.core.feature
 
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
@@ -21,16 +20,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class DynamicFeatureManager private constructor(
+class DynamicFeatureManager(
     application: Application
 ) : ModuleManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val manager = SplitInstallManagerFactory.create(application)
     private val states = mutableMapOf<String, MutableStateFlow<ModuleState>>()
     private val mutex = Mutex()
-    private var currentActivity: Activity? = null
     private val prefs: SharedPreferences? =
-        currentActivity?.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        application.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
     private val listener = SplitInstallStateUpdatedListener { state ->
         val moduleName =
@@ -47,17 +45,16 @@ class DynamicFeatureManager private constructor(
             SplitInstallSessionStatus.INSTALLED -> {
                 Log.d(TAG, "📱  SplitInstallSessionStatus.INSTALLED ")
                 loadPlantsFeature()
-                prefs?.edit()?.putBoolean("isFeatureInitialized", true)?.apply()
                 ModuleState.Installed
             }
 
             SplitInstallSessionStatus.REQUIRES_USER_CONFIRMATION -> {
                 Log.d(TAG, "📱  SplitInstallSessionStatus.REQUIRES_USER_CONFIRMATION ")
                 ModuleState.ConfirmationRequired {
-                    currentActivity?.startIntentSender(
-                        state.resolutionIntent()?.intentSender,
-                        null, 0, 0, 0
-                    )
+//                    currentActivity?.startIntentSender(
+//                        state.resolutionIntent()?.intentSender,
+//                        null, 0, 0, 0
+//                    )
                 }
             }
 
@@ -123,10 +120,6 @@ class DynamicFeatureManager private constructor(
         manager.unregisterListener(listener)
     }
 
-    override fun setActivity(activity: Activity?) {
-        currentActivity = activity
-    }
-
     private fun loadPlantsFeature() {
         try {
             val clazz = Class.forName("com.kuru.nextgen.plants.PlantsFeature")
@@ -134,12 +127,15 @@ class DynamicFeatureManager private constructor(
             val instance =
                 clazz.getDeclaredField("INSTANCE").get(null) // If PlantsFeature is an object
             Log.d(TAG, "PlantsFeature loadPlantsFeature successfully")
+            prefs?.edit()?.putBoolean("isFeatureInitialized", true)?.apply()
+            Log.d(
+                TAG,
+                "isFeatureInitialized =  ${prefs?.getBoolean("isFeatureInitialized", false)}"
+            )
         } catch (e: Exception) {
             Log.d(TAG, "Failed to load PlantsFeature: ${e.message}", e)
         }
-
         FeatureRegistry.initializeAll()
-
     }
 
     companion object {
@@ -164,7 +160,6 @@ interface ModuleManager {
     suspend fun loadModule(moduleName: String)
     fun retryModuleLoad(moduleName: String)
     fun cleanup()
-    fun setActivity(activity: Activity?)
 }
 
 sealed class ModuleState {

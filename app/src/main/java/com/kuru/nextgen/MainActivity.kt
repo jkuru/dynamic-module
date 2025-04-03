@@ -1,5 +1,6 @@
 package com.kuru.nextgen
 
+import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -27,13 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kuru.nextgen.NextGenApplication.Companion.PLANTS_MODULE
 import com.kuru.nextgen.NextGenApplication.Companion.TAG
+import com.kuru.nextgen.core.feature.DeferredDynamicFeatureManager
 import com.kuru.nextgen.core.feature.DynamicFeatureManager
-import com.kuru.nextgen.core.feature.FeatureRegistry
 import com.kuru.nextgen.core.util.FeatureScreenRegistry
 import com.kuru.nextgen.feature.animals.AnimalsScreen
 import com.kuru.nextgen.feature.cars.CarsScreen
@@ -45,27 +47,34 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private val prefs: SharedPreferences by lazy { getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         super.onCreate(savedInstanceState)
-        val isFeatureInitialized = prefs.getBoolean("isFeatureInitialized", false)
-        val featureManager = DynamicFeatureManager.getInstance(application)
-        featureManager.setActivity(this)
+
         setContent {
             MaterialTheme {
-                MainScreen(featureManager)
+                MainScreen()
             }
         }
+        dynamicInstall(this.application)
+        // DeferredDynamicFeatureManager.getInstance(this.application).installModule(PLANTS_MODULE)
+    }
 
+    /**
+     * Dynamic Install of Modules
+     */
+    private fun dynamicInstall(
+        application: Application
+    ) {
+        val featureManager = DynamicFeatureManager.getInstance(application)
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         scope.launch {
             Log.d(TAG, "DynamicFeatureManager started")
             if (!featureManager.isModuleInstalled(PLANTS_MODULE)) {
                 // Module isn’t installed: load it and initialize the feature
                 Log.d(TAG, "Loading plants module")
-                prefs.edit().putBoolean("isFeatureInitialized",false).apply()
                 featureManager.loadModule(PLANTS_MODULE)
-            } else if (!isFeatureInitialized) {
+            } else if (!isFeatureInitialized(application)) {
                 // Module is installed, but feature isn’t initialized: initialize it
                 Log.d(TAG, "Module already installed, initializing failed")
             } else {
@@ -74,11 +83,16 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private suspend fun deferredDynamicInstall(application: Application) {
+        val deferredDynamicFeatureManager = DeferredDynamicFeatureManager(application)
+        deferredDynamicFeatureManager.installModule(PLANTS_MODULE)
+    }
 }
 
 @Composable
 fun MainScreen(
-    featureManager: DynamicFeatureManager
+
 ) {
     val navController = rememberNavController()
 
@@ -120,7 +134,8 @@ fun MainScreen(
                 CarsScreen(navController)
             }
             composable("plants") {
-                if (featureManager.isModuleInstalled(PLANTS_MODULE)) {
+                val isFeatureInitialized = isFeatureInitialized(navController.context)
+                if (isFeatureInitialized) {
                     LoadingScreen("Module is installed!...")
                     FeatureScreenRegistry.getScreen("plants")?.invoke(navController) ?: run {
                         Box(
@@ -142,6 +157,19 @@ fun MainScreen(
             }
         }
     }
+}
+
+
+private fun isFeatureInitialized(context: Context): Boolean {
+    val prefs: SharedPreferences = context.getSharedPreferences(
+        "app_prefs",
+        Context.MODE_PRIVATE
+    )
+    val isFeatureInitialized = prefs.getBoolean(
+        "isFeatureInitialized",
+        false
+    )
+    return isFeatureInitialized
 }
 
 @Composable
