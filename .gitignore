@@ -66,6 +66,7 @@ captures/
 .cxx/
 
 **/build/
+**/build 2/
 # Android build intermediates
 **/intermediates/
 **/incremental/
