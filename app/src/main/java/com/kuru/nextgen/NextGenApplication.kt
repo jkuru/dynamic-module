@@ -21,9 +21,11 @@ class NextGenApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        //TODO check this
         if (prefs.getBoolean("isFeatureInitialized", false)) {
             prefs.edit().putBoolean("isFeatureInitialized", false).apply()
         }
+        DeferredDynamicFeatureManager.getInstance(this).installModule(PLANTS_MODULE)
     }
 
     companion object {

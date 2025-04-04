@@ -102,9 +102,6 @@ class DeferredDynamicFeatureManager(
                 }
             }
         )
-        scope.async {
-            job.join()
-        }
     }
 
     /**

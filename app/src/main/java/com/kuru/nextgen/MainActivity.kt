@@ -56,8 +56,7 @@ class MainActivity : ComponentActivity() {
                 MainScreen()
             }
         }
-        dynamicInstall(this.application)
-        // DeferredDynamicFeatureManager.getInstance(this.application).installModule(PLANTS_MODULE)
+        //dynamicInstall(this.application)
     }
 
     /**
