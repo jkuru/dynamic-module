@@ -4,12 +4,13 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.kuru.nextgen"
-    compileSdk = 34
+    compileSdk = 34 // Correct
 
     val versionMajor = 51
     val versionMinor = 1
@@ -18,7 +19,7 @@ android {
     defaultConfig {
         applicationId = "com.kuru.nextgen"
         minSdk = 31
-        targetSdk = 34
+        targetSdk = 34 // Correct
         versionCode = versionMajor
         versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
         multiDexEnabled = true
@@ -31,23 +32,34 @@ android {
 
     signingConfigs {
         create("release") {
+            // Ensure keystore.properties exists at the root project level
             val propsFile = rootProject.file("keystore.properties")
-            val props = Properties().apply {
-                load(FileInputStream(propsFile))
+            if (propsFile.exists()) {
+                val props = Properties().apply {
+                    load(FileInputStream(propsFile))
+                }
+                storeFile = file(props["storeFile"] as String)
+                storePassword = props["storePassword"] as String
+                keyAlias = props["keyAlias"] as String
+                keyPassword = props["keyPassword"] as String
+            } else {
+                println("Warning: keystore.properties not found. Release builds may fail signing.")
+                // Optionally configure dummy signing config for debug/dev builds
+                // storeFile = file("debug.keystore") // Example
+                // storePassword = "android" // Example
+                // keyAlias = "androiddebugkey" // Example
+                // keyPassword = "android" // Example
             }
-            storeFile = file(props["storeFile"] as String)
-            storePassword = props["storePassword"] as String
-            keyAlias = props["keyAlias"] as String
-            keyPassword = props["keyPassword"] as String
         }
     }
+
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
-            //    getDefaultProguardFile("proguard-android-optimize.txt"),
+                //    getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
@@ -64,11 +76,11 @@ android {
     }
 
     buildFeatures {
-        compose = true
+        compose = true // Correctly enables compose
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.11" // Corrected version for Kotlin 1.9.23 / BOM 2024.05.00
     }
 
     packaging {
@@ -80,60 +92,65 @@ android {
 
     bundle {
         language {
-            // This property is set to true by default.
-            // You can specify `false` to turn off
-            // generating configuration APKs for language resources.
-            // These resources are instead packaged with each base and
-            // feature APK.
-            // Continue reading below to learn about situations when an app
-            // might change setting to `false`, otherwise consider leaving
-            // the default on for more optimized downloads.
             enableSplit = false
         }
         density {
-            // This property is set to true by default.
             enableSplit = true
         }
         abi {
-            // This property is set to true by default.
             enableSplit = true
         }
     }
 
+    // Ensure dynamic feature module name is correct
     dynamicFeatures.add(":feature_plants")
 }
 
+// Corrected dependencies block using aliases from the cleaned libs.versions.toml
 dependencies {
-    api(project(":core"))
-    implementation(project(":feature-animals"))
-    implementation(project(":feature-cars"))
+    implementation(project(":core")) // Project dependency
+    implementation(project(":feature-animals")) // Added back from original file
+    implementation(project(":feature-cars")) // Added back from original file
 
+    // Use correct aliases from libs.versions.toml
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.compose.runtime) // Managed by BOM
+    implementation(libs.androidx.compose.ui)      // Managed by BOM
+    implementation(libs.androidx.compose.ui.graphics) // Added back from original file (Managed by BOM)
+    implementation(libs.androidx.compose.ui.tooling.preview) // Managed by BOM
+    implementation(libs.androidx.compose.material3) // Version specified in TOML
+    implementation(libs.androidx.compose.material.icons.extended) // Added back from original file (Managed by BOM)
+
+
+    implementation(libs.androidx.lifecycle.runtime.ktx) // Use base alias
+    implementation(libs.androidx.activity.compose) // Use base alias (Managed by BOM or activity version)
+    implementation(libs.androidx.lifecycle.viewmodel.compose) // Use base alias
+    implementation(libs.androidx.navigation.compose) // Use base alias
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.kotlin.stdlib)
+
+
+    // Other dependencies from original file
+    implementation(libs.androidx.datastore.core.android)
     implementation(libs.androidx.multidex)
+    implementation(libs.material) // Alias for older material, check if needed
 
-    implementation(libs.androidx.core.ktx.v1120)
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-
-    implementation("com.google.android.material:material:1.11.0")
 
     // Play Core dependencies
-     api(libs.feature.delivery)
-     api(libs.feature.delivery.ktx)
-     implementation(libs.kotlinx.coroutines.play.services)
+    api(libs.play.feature.delivery) // Use 'api' or 'implementation' as needed
+    api(libs.play.feature.delivery.ktx) // Use 'api' or 'implementation' as needed
+    implementation(libs.kotlinx.coroutines.play.services)
 
+    // Testing dependencies
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit.v115)
-    androidTestImplementation(libs.androidx.espresso.core.v351)
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    androidTestImplementation(libs.androidx.test.ext.junit) // Use androidx.test.ext alias
+    androidTestImplementation(libs.androidx.test.espresso.core) // Use androidx.test alias
+    androidTestImplementation(platform(libs.androidx.compose.bom)) // Use BOM for Compose test dependencies
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4) // Managed by BOM
+
+    // Debug dependencies
+    debugImplementation(libs.androidx.compose.ui.tooling) // Managed by BOM
+    debugImplementation(libs.androidx.compose.ui.test.manifest) // Managed by BOM
 }

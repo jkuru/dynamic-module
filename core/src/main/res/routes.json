@@ -1,0 +1,19 @@
+{
+  "routes": [
+    {
+      "path": "/df/plants",
+      "target": "PlantsScreen",
+      "params": ["type", "id"]
+    },
+    {
+      "path": "/df/cars/{id}",
+      "target": "CarsScreen",
+      "params": ["model"]
+    },
+    {
+      "path": "/df/people/*",
+      "target": "PeopleScreen",
+      "wildcard": true
+    }
+  ]
+}

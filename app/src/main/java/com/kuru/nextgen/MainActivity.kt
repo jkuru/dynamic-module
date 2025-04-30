@@ -2,6 +2,7 @@ package com.kuru.nextgen
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
@@ -28,15 +29,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.kuru.featureflow.component.ui.DFComponentActivity
 import com.kuru.nextgen.NextGenApplication.Companion.PLANTS_MODULE
 import com.kuru.nextgen.NextGenApplication.Companion.TAG
 import com.kuru.nextgen.core.feature.DeferredDynamicFeatureManager
 import com.kuru.nextgen.core.feature.DynamicFeatureManager
-import com.kuru.nextgen.core.util.FeatureScreenRegistry
 import com.kuru.nextgen.feature.animals.AnimalsScreen
 import com.kuru.nextgen.feature.cars.CarsScreen
 import kotlinx.coroutines.CoroutineScope
@@ -133,25 +134,31 @@ fun MainScreen(
                 CarsScreen(navController)
             }
             composable("plants") {
-                val isFeatureInitialized = isFeatureInitialized(navController.context)
-                if (isFeatureInitialized) {
-                    LoadingScreen("Module is installed!...")
-                    FeatureScreenRegistry.getScreen("plants")?.invoke(navController) ?: run {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("Plants feature is installed but screen not found")
-                        }
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Plants feature is being prepared and will be available soon")
-                    }
-                }
+                val intent: Intent = Intent(
+                    navController.context,
+                    DFComponentActivity::class.java
+                )
+                intent.putExtra("uri", "/chase/df/route/feature_plants")
+                navController.context.startActivity(intent)
+//                val isFeatureInitialized = isFeatureInitialized(navController.context)
+//                if (isFeatureInitialized) {
+//                    LoadingScreen("Module is installed!...")
+//                    FeatureScreenRegistry.getScreen("plants")?.invoke(navController) ?: run {
+//                        Box(
+//                            modifier = Modifier.fillMaxSize(),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Text("Plants feature is installed but screen not found")
+//                        }
+//                    }
+//                } else {
+//                    Box(
+//                        modifier = Modifier.fillMaxSize(),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text("Plants feature is being prepared and will be available soon")
+//                    }
+//                }
 
             }
         }

@@ -1,8 +1,10 @@
 plugins {
     id("com.android.dynamic-feature")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
 }
+
 
 android {
     namespace = "com.kuru.nextgen.plants"
@@ -10,6 +12,7 @@ android {
 
     defaultConfig {
         minSdk = 31
+
  //       missingDimensionStrategy("store", "play")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -34,7 +37,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
 
     packaging {
@@ -50,23 +53,46 @@ android {
 dependencies {
     implementation(project(":app"))
     api(project(":core"))
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.featureflow)
+    implementation(libs.hilt.android)
 
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // Use correct aliases from libs.versions.toml
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.compose.runtime) // Managed by BOM
+    implementation(libs.androidx.compose.ui)      // Managed by BOM
+    implementation(libs.androidx.compose.ui.tooling.preview) // Managed by BOM
+    implementation(libs.androidx.compose.material3) // Version specified in TOML (check compatibility if needed)
+
+    implementation(libs.androidx.lifecycle.runtime.ktx) // Use base alias
+    implementation(libs.androidx.lifecycle.viewmodel.compose) // Use base alias
+    implementation(libs.androidx.navigation.compose) // Use base alias
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.kotlin.stdlib)
+
+    // Play Core dependencies (Assuming these were present before, add if needed)
+    // implementation(libs.play.feature.delivery)
+    // implementation(libs.play.feature.delivery.ktx)
+    // implementation(libs.kotlinx.coroutines.play.services)
+
+    // Other dependencies (Assuming these were present before, add if needed)
+    // implementation(libs.androidx.datastore.core.android)
+    // implementation(libs.androidx.multidex)
+    // implementation(libs.material) // Android Material (View system)
+
+    // Testing dependencies
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit) // Use androidx.test.ext alias
+    androidTestImplementation(libs.androidx.test.espresso.core) // Use androidx.test alias
+    androidTestImplementation(platform(libs.androidx.compose.bom)) // Use BOM for Compose test dependencies
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4) // Managed by BOM
+
+    // Debug dependencies
+    debugImplementation(libs.androidx.compose.ui.tooling) // Managed by BOM
+    debugImplementation(libs.androidx.compose.ui.test.manifest) // Managed by BOM
 }
