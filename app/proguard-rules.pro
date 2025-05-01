@@ -22,3 +22,7 @@
 -keep class com.google.android.play.core.** { *; }
 -keep class com.google.android.play.core.internal.** { *; }
 -keep class com.kuru.nextgen.plants.** { *; }
+-keep interface com.kuru.featureflow.component.register.DFComponentEntry { *; }
+-keepclassmembers class * implements com.kuru.featureflow.component.register.DFComponentEntry {
+    public <init>();
+}
