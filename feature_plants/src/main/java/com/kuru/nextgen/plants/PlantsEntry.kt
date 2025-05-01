@@ -9,9 +9,14 @@ import com.kuru.featureflow.component.register.DFComponentRegistry
 import com.kuru.featureflow.component.register.DFRegistryEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 
-object PlantEntry : DFComponentEntry { // Implement the SPI
+class PlantEntry : DFComponentEntry {
+    companion object {
+        private const val TAG = "DynamicFeatureManager"
+    }
 
-    const val TAG = "DynamicFeatureManager"
+    constructor() {
+        // Public no-arg constructor for ServiceLoader
+    }
     override fun initialize(context: Context) { // Method from DFComponentEntry interface
         // 1. Get the Entry Point accessor
         val entryPoint = EntryPointAccessors.fromApplication(
