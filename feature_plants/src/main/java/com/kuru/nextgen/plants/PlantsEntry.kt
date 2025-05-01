@@ -38,7 +38,7 @@ class PlantEntry : DFComponentEntry {
     // Helper function to create config
     private fun plantConfig(): DFComponentConfig {
         return DFComponentConfig(
-            route = "feature-plants",
+            route = "feature_plants",
             listOfDFComponentInterceptor = listOf(
                 // Pre-install interceptor: Check network
                 DFComponentInterceptor(preInstall = true) {
