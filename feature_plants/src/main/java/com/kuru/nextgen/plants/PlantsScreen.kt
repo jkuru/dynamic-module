@@ -34,7 +34,7 @@ import com.kuru.nextgen.core.util.LogEffect
 
 
 @Composable
-fun PlantsScreen(navController: NavController) {
+fun PlantsScreen(navController: NavController,params: List<String>) {
     val TAG = "DynamicFeatureManager"
     val viewModel = remember { PlantsViewModel() }
     val state by viewModel.state.collectAsState()

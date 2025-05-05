@@ -29,8 +29,8 @@ class PlantEntry : DFComponentEntry {
 
         // 3. Now use the registry
         val config = plantConfig() // Your feature-specific config
-        registry.register(config) { navController ->
-            PlantsScreen(navController) // Your feature's screen
+        registry.register(config) { navController, params ->
+            PlantsScreen(navController,params) // Your feature's screen
         }
         Log.d("TAG","Plant feature initialized and registered!")
     }

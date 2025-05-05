@@ -1,320 +1,92 @@
-# Dynamic Feature Management System
+# Sample Android Project
 
-A robust dynamic feature management solution for Android applications that enables on-demand loading of feature modules. This system follows clean architecture principles and provides a clean API for feature management.
+## Description
 
-## Architecture Overview
+This repository contains a sample Android application built using Kotlin and Jetpack Compose. It demonstrates a multi-module architecture approach, separating features into distinct modules alongside a `core` module for shared components and an `app` module for application entry and assembly. The project specifically showcases the implementation of on-demand Dynamic Feature Modules via Google Play Feature Delivery.
 
-### Core Components
+## Features
 
-#### 1. ModuleManager Interface
-```kotlin
-interface ModuleManager {
-    fun isModuleInstalled(moduleName: String): Boolean
-    fun getModuleState(moduleName: String): Flow<ModuleState>
-    suspend fun loadModule(moduleName: String)
-    fun retryModuleLoad(moduleName: String)
-    fun handleUserConfirmation(moduleName: String)
-    fun setConfirmationLauncher(launcher: ActivityResultLauncher<IntentSenderRequest>)
-    fun setActivity(activity: Activity?)
-    fun cleanup()
-}
-```
-- Defines the contract for feature module management
-- Provides reactive state management through Kotlin Flow
-- Handles module installation, confirmation, and cleanup
+* **Modular Architecture:** Organizes code into independent feature modules and a shared `core` module.
+* **Standard Feature Modules:** Includes standard library modules for:
+    * Animals (`:feature-animals`)
+    * Cars (`:feature-cars`)
+* **Dynamic Feature Module:** Demonstrates on-demand loading with the:
+    * Plants (`:feature_plants`) module
+* **Core Module:** Contains shared utilities, resources (like navigation routes in `routes.json` [cite: source_file]), and potentially base classes used across features.
+* **Application Module:** The main entry point (`app`) that integrates the different feature modules and handles base application setup.
 
-#### 2. Module States
-```kotlin
-sealed class ModuleState {
-    object NotLoaded : ModuleState()
-    object Loading : ModuleState()
-    data class LoadingProgress(val progress: Float) : ModuleState()
-    object Loaded : ModuleState()
-    data class NeedsConfirmation(val confirmationCallback: () -> Unit) : ModuleState()
-    data class Error(val message: String) : ModuleState()
-}
-```
-- Represents all possible states of a feature module
-- Provides type-safe state handling
-- Includes progress tracking and error states
+## Dynamic Feature Module Installation
 
-#### 3. DynamicFeatureManager Implementation
-```kotlin
-internal class DynamicFeatureManager private constructor(
-    private val application: Application
-) : ModuleManager
-```
-- Singleton implementation of ModuleManager
-- Handles Play Core integration
-- Manages installation sessions and state updates
+This project demonstrates the use of Android's Dynamic Feature Modules for on-demand delivery, specifically showcased by the `:feature_plants` module. Unlike the `:feature-animals` and `:feature-cars` modules which are standard libraries included in the base install, `:feature_plants` is designed to be downloaded and installed only when needed.
 
-### Key Features
+**Implementation Highlights:**
 
-#### Session Management
-- Tracks installation sessions
-- Handles session cleanup
-- Maps session IDs to module names
+* **Play Feature Delivery:** The `app` module includes the necessary dependencies for Google Play Feature Delivery (`play.feature.delivery` and `play.feature.delivery.ktx`) to manage the download and installation process [cite: source_file].
+* **Module Configuration:**
+    * The `:feature_plants` module applies the `com.android.dynamic-feature` plugin in its `build.gradle.kts` file [cite: source_file].
+    * The `app` module's `build.gradle.kts` declares `:feature_plants` in the `dynamicFeatures` block [cite: source_file].
+* **Installation Trigger & Framework:**
+    * Navigation to the "Plants" feature within the `MainActivity` initiates the process [cite: source_file].
+    * Instead of directly using the Play Core library's `SplitInstallManager` within `MainActivity`, the app launches a specialized `DFComponentActivity` (from the `com.kuru.featureflow.component.ui` package) via an Intent [cite: source_file].
+    * This `DFComponentActivity` appears to encapsulate the logic for requesting the module, handling installation states (downloading, installing), and then navigating to the actual feature content (likely `PlantsScreen` within `:feature_plants`). It uses a custom URI (`/chase/df/route/feature_plants`) passed in the Intent to identify the target [cite: source_file].
+    * While the core Play Core library dependencies are in `app` [cite: source_file], and the dynamic feature module `:feature_plants` depends on the `:core` module [cite: source_file], the primary framework facilitating the dynamic install flow seems to be this external `DFComponentActivity` / `featureflow` component, which is invoked by the `app` module [cite: source_file]. The `:core` module might provide supporting configurations or utilities (like the navigation routes defined in `routes.json` [cite: source_file]), but the fetched files don't show it directly handling the `SplitInstallManager` API calls.
 
-#### State Management
-- Uses MutableStateFlow for reactive updates
-- Provides thread-safe state updates
-- Handles state transitions
+This approach abstracts the dynamic installation complexity away from the main application flow, potentially allowing for a more standardized way to handle navigation to and loading of dynamic features across the app.
 
-#### Error Handling
-- Comprehensive error states
-- Detailed error messages
-- Retry mechanisms
+## Tech Stack
 
-#### Compatibility Checking
-- Device compatibility verification
-- SDK version validation
-- Network availability checks
+* **Language:** Kotlin
+* **UI Toolkit:** Jetpack Compose
+* **Build System:** Gradle with Kotlin DSL (`build.gradle.kts`)
+* **Architecture:** Multi-module, MVVM/MVI (inferred), Dynamic Feature Modules
+* **Dependency Injection:** Hilt (inferred from plugin usage)
+* **Dynamic Delivery:** Play Feature Delivery
 
-### Architecture Patterns
+## Project Structure
 
-#### 1. Singleton Pattern
-- Used in DynamicFeatureManager
-- Ensures single instance across app
-- Thread-safe initialization
+The project follows a multi-module structure:
 
-#### 2. Observer Pattern
-- Implemented through Kotlin Flow
-- Reactive state updates
-- UI state synchronization
 
-#### 3. Factory Pattern
-- ModuleManagerProvider for instance creation
-- Encapsulates implementation details
-- Provides dependency injection
+Sample/
+├── app/                 # Main application module, integrates features
+├── core/                # Shared code, resources, utilities [cite: source_file]
+├── feature-animals/     # Standard library feature module for Animals
+├── feature-cars/        # Standard library feature module for Cars
+├── feature_plants/      # Dynamic Feature module for Plants
+├── gradle/              # Gradle wrapper files
+├── build.gradle.kts     # Root build script [cite: source_file]
+├── settings.gradle.kts  # Module inclusion settings [cite: source_file]
+├── gradle.properties    # Gradle configuration [cite: source_file]
+├── local.properties     # Local environment settings (SDK path, etc. - not checked in) [cite: source_file]
+└── keystore.properties  # Keystore configuration (sensitive - not checked in) [cite: source_file]
 
-#### 4. State Pattern
-- Sealed classes for state management
-- Type-safe state transitions
-- Clear state boundaries
 
-### Security Considerations
+## Setup and Build
 
-#### 1. Activity Context Management
-- Proper activity lifecycle handling
-- Memory leak prevention
-- Context cleanup
+1.  **Clone the Repository:** (Assuming this code was hosted)
+    ```bash
+    git clone <repository-url>
+    cd Sample
+    ```
+2.  **Open in Android Studio:** Open the `Sample` project folder in Android Studio (latest stable version recommended).
+3.  **Gradle Sync:** Android Studio should automatically sync the Gradle project. If not, trigger a sync manually (File > Sync Project with Gradle Files).
+4.  **Configuration:**
+    * Ensure you have the necessary Android SDK installed via the SDK Manager in Android Studio (targetSdk is 34 [cite: source_file]).
+    * You might need to create a `local.properties` file in the root directory with the path to your Android SDK, e.g.:
+        ```properties
+        sdk.dir=/path/to/your/android/sdk
+        ```
+      [cite: source_file]
+    * If the project requires signing for release builds, you will need to create and configure `keystore.properties` with your signing information (this file is typically not included in version control for security) [cite: source_file].
+5.  **Build:** Build the project using Android Studio (Build > Make Project) or via the Gradle wrapper:
+    ```bash
+    ./gradlew build
+    ```
+6.  **Run:** Run the application on an Android emulator or a physical device using Android Studio (Run > Run 'app').
 
-#### 2. Permission Handling
-- Network permission checks
-- Storage permission management
-- Runtime permission requests
+## Notes
 
-### Best Practices
+* This README is generated based on the project structure and build configuration files. Specific implementation details within the source code may vary.
+* Dependencies and specific library versions can be found in the `build.gradle.kts` files within each module.
+* The project utilizes build features like Compose and sets Java compatibility to version 17 [cite: source_file].
 
-#### 1. Logging
-- Comprehensive logging system
-- Debug and error tracking
-- Installation progress monitoring
-
-#### 2. Resource Management
-- Proper cleanup of resources
-- Memory management
-- Session cleanup
-
-#### 3. Thread Safety
-- Mutex for critical sections
-- Coroutine scope management
-- Background task handling
-
-## System Flow
-
-### Sequence Diagram
-
- Refer Article 
-
-### Flow Description
-
-1. **Initialization Phase**
-   - ModuleManager instance creation
-   - Activity and launcher setup
-   - Initial state configuration
-
-2. **Pre-installation Checks**
-   - Module installation status verification
-   - Compatibility checks
-   - Play Store availability
-   - Network connectivity validation
-
-3. **Installation Process**
-   - Installation request initiation
-   - Progress tracking
-   - Success/failure handling
-   - State updates to UI
-
-4. **Error Handling**
-   - ACCESS_DENIED scenario management
-   - Deferred installation handling
-   - User confirmation flow
-   - Error state propagation
-
-5. **Cleanup**
-   - Resource cleanup
-   - Listener unregistration
-   - State reset
-
-## Usage Example
-
-```kotlin
-// Initialize
-val moduleManager = ModuleManagerProvider.getInstance(application)
-moduleManager.setActivity(activity)
-
-// Load module
-scope.launch {
-    moduleManager.loadModule("feature_name")
-}
-
-// Observe state
-moduleManager.getModuleState("feature_name")
-    .collect { state ->
-        when (state) {
-            is ModuleState.Loaded -> // Handle loaded state
-            is ModuleState.Loading -> // Handle loading state
-            is ModuleState.Error -> // Handle error state
-        }
-    }
-```
-
-## ActivityResultLauncher Implementation
-
-### Overview
-The system uses `ActivityResultLauncher<IntentSenderRequest>` to handle Play Store's installation confirmation dialogs in a modern, type-safe way.
-
-### Purpose
-```kotlin
-private lateinit var confirmationLauncher: ActivityResultLauncher<IntentSenderRequest>
-```
-- Part of the modern Android Activity Result API
-- Handles the result of an activity started for a result
-- Provides type-safe way to handle activity results
-
-### Implementation Details
-
-#### 1. Launcher Registration
-```kotlin
-confirmationLauncher = registerForActivityResult(
-    ActivityResultContracts.StartIntentSenderForResult()
-) { result ->
-    if (result.resultCode == Activity.RESULT_OK) {
-        moduleManager.handleUserConfirmation(PLANTS_MODULE)
-    }
-}
-```
-
-#### 2. Usage in ModuleManager
-```kotlin
-ModuleState.NeedsConfirmation {
-    installationState.state.resolutionIntent()?.let {
-        confirmationLauncher?.launch(
-            IntentSenderRequest.Builder(it.intentSender)
-                .build()
-        )
-    }
-}
-```
-
-### Key Benefits
-
-1. **Type Safety**
-   - Compile-time checking of result handling
-   - Prevents runtime errors
-   - Better IDE support
-
-2. **Lifecycle Awareness**
-   - Automatically handles activity recreation
-   - No manual state saving needed
-   - Handles configuration changes
-
-3. **Memory Safety**
-   - No memory leaks from static callbacks
-   - Proper cleanup on activity destruction
-   - Better resource management
-
-4. **Modern API Integration**
-   - Part of the new Activity Result API
-   - Better integration with modern Android architecture
-   - Follows latest best practices
-
-### Flow Example
-
-Refer article 
-
-### Error Handling
-
-```kotlin
-confirmationLauncher = registerForActivityResult(
-    ActivityResultContracts.StartIntentSenderForResult()
-) { result ->
-    when (result.resultCode) {
-        Activity.RESULT_OK -> {
-            // User confirmed installation
-            moduleManager.handleUserConfirmation(PLANTS_MODULE)
-        }
-        Activity.RESULT_CANCELED -> {
-            // User cancelled installation
-            // Handle cancellation
-        }
-        else -> {
-            // Handle other results
-        }
-    }
-}
-```
-
-### Integration with Play Core
-
-```kotlin
-// Play Core provides the IntentSender
-val resolutionIntent = installationState.state.resolutionIntent()
-if (resolutionIntent != null) {
-    // Launch the confirmation dialog
-    confirmationLauncher?.launch(
-        IntentSenderRequest.Builder(resolutionIntent.intentSender)
-            .build()
-    )
-}
-```
-
-### Why Not Deprecated Methods?
-
-1. **Modern API Benefits**
-   - Replaces older `startActivityForResult()`
-   - More robust handling of configuration changes
-   - Better integration with modern Android architecture
-
-2. **Improved Developer Experience**
-   - Type-safe result handling
-   - Better IDE support
-   - Clearer code structure
-
-3. **Better Error Prevention**
-   - Compile-time checking
-   - Runtime safety
-   - Memory leak prevention
-
-## Future Improvements
-
-1. **Caching**
-   - Module state persistence
-   - Offline support
-   - Installation progress caching
-
-2. **Analytics**
-   - Installation success rates
-   - Error tracking
-   - Usage statistics
-
-3. **Performance**
-   - Parallel module loading
-   - Background installation
-   - Resource optimization
-
-4. **Testing**
-   - Unit test coverage
-   - Integration tests
-   - UI tests
