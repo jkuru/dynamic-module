@@ -1,6 +1,5 @@
 package com.kuru.nextgen.plants
 
-import android.app.Activity
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,10 +28,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -42,30 +42,31 @@ import androidx.navigation.compose.rememberNavController
 import com.kuru.nextgen.core.util.LogDisposableEffect
 import com.kuru.nextgen.core.util.LogEffect
 
-// This is the main entry point Composable provided to DFComponentActivity's dynamicScreenLambda
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantsFeatureScreen(
-    // Although DFComponentActivity provides a NavController,
-    // we don't strictly need it here anymore for back navigation.
-    // Keep it if the feature *needs* to navigate *outside* itself, otherwise it can be removed.
-    outerNavController: NavController, // Renamed for clarity
-    params: List<String> // Parameters passed from the hosting Activity
+    outerNavController: NavController, // Main app's NavController
+    params: List<String> // Parameters from DFComponentActivity
 ) {
     val TAG = "PlantsFeatureScreen"
-    val innerNavController = rememberNavController() // Controller for internal navigation (list <-> detail)
-    val viewModel = remember { PlantsViewModel() } // Instantiate ViewModel
+    val innerNavController = rememberNavController()
+    val viewModel = remember { PlantsViewModel() }
+    var isEffectTriggered by remember { mutableStateOf(false) }
 
-    // Get the current Activity context to finish it on back press from the top level
-    val context = LocalContext.current
-    val activity = context as? Activity // Safely cast to Activity
+    LaunchedEffect(Unit) {
+        if (!isEffectTriggered) {
+            Log.d(TAG, "Effect triggered")
+            isEffectTriggered = true
+            Log.d(TAG, "PlantsFeatureScreen Composable launched successfully")
+        }
+    }
 
-    LogEffect(TAG, "PlantsFeatureScreen Composable launched successfully")
     LogDisposableEffect(TAG) {
         Log.d(TAG, "PlantsFeatureScreen Composable disposed")
     }
 
-    // Determine the current route within the inner NavHost to potentially change TopAppBar title
+
+    // Determine current route for TopAppBar title
     val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -73,23 +74,19 @@ fun PlantsFeatureScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    // Dynamically set title based on the inner route
                     Text(
                         when (currentRoute) {
                             "plant_detail/{plantId}" -> "Plant Detail"
-                            else -> "Plants List" // Default title for "plants_list"
+                            else -> "Plants List"
                         }
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // Check if we can navigate back *within* the feature first
-                        if (innerNavController.previousBackStackEntry != null) {
-                            innerNavController.navigateUp()
+                        if (innerNavController.popBackStack()) {
+                            Log.d(TAG, "Navigated up within inner NavController")
                         } else {
-                            // Otherwise, finish the hosting Activity to go back to the main app
-                            Log.d(TAG, "No inner back stack, finishing Activity")
-                            activity?.finish()
+                            Log.d(TAG, "No inner back stack, popping to main graph")
                         }
                     }) {
                         Icon(
@@ -98,53 +95,48 @@ fun PlantsFeatureScreen(
                         )
                     }
                 }
-                // Optional: Add actions or customize colors
             )
         }
-    ) { paddingValues -> // Scaffold provides padding for edge-to-edge
-        // NavHost for navigating between the list and detail screens *within* this feature
+    ) { paddingValues ->
         NavHost(
             navController = innerNavController,
             startDestination = "plants_list",
-            // Apply padding from Scaffold to the NavHost container
             modifier = Modifier.padding(paddingValues)
         ) {
             composable("plants_list") {
-                // Pass the ViewModel and navigation callback
                 PlantsListScreen(
                     viewModel = viewModel,
                     onNavigateToDetail = { id ->
+                        Log.d(TAG, "Navigating to detail for plant ID: $id")
                         innerNavController.navigate("plant_detail/$id")
                     }
                 )
             }
             composable("plant_detail/{plantId}") { backStackEntry ->
-                // Extract ID and show detail screen
-                // Note: The back navigation is now handled by the TopAppBar's navigationIcon
                 PlantDetailScreen(
                     viewModel = viewModel,
                     plantId = backStackEntry.arguments?.getString("plantId")?.toIntOrNull(),
-                    // Provide a lambda to navigate back *within* the feature (handled by TopAppBar now)
-                    onNavigateBack = { innerNavController.navigateUp() }
+                    onNavigateBack = {
+                        if (innerNavController.popBackStack()) {
+                            Log.d(TAG, "Navigated up from PlantDetailScreen")
+                        }
+                    }
                 )
             }
         }
     }
 }
 
-
-// --- Sub-Screens (List and Detail) ---
-
 @Composable
 fun PlantsListScreen(
-    viewModel: PlantsViewModel, // Receive ViewModel
-    onNavigateToDetail: (Int) -> Unit
+    viewModel: PlantsViewModel,
+    onNavigateToDetail: (Int) -> Unit,
 ) {
     val TAG = "PlantsListScreen"
-    val state by viewModel.state.collectAsState() // Observe state
+    val state by viewModel.state.collectAsState()
 
     LogEffect(TAG, "LaunchedEffect triggered")
-    LaunchedEffect(Unit) { // Load data when the list screen appears
+    LaunchedEffect(Unit) {
         viewModel.handleIntent(PlantsIntent.LoadPlants)
         Log.d(TAG, "LoadPlants Intent sent")
     }
@@ -159,34 +151,29 @@ fun PlantsListScreen(
                 CircularProgressIndicator()
             }
         }
-
         state.error != null -> {
             Log.e(TAG, "Displaying error: ${state.error}")
             Box(
-                modifier = Modifier.fillMaxSize().padding(16.dp), // Add padding for error text
+                modifier = Modifier.fillMaxSize().padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = "Error: ${state.error}", color = MaterialTheme.colorScheme.error)
             }
         }
-
         else -> {
             Log.d(TAG, "Displaying plants list with ${state.plants.size} items")
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp) // Padding for the list content
+                contentPadding = PaddingValues(16.dp)
             ) {
-                items(state.plants, key = { it.id }) { plant -> // Add key for performance
+                items(state.plants, key = { it.id }) { plant ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp), // Reduced vertical padding
+                            .padding(vertical = 4.dp),
                         onClick = {
                             Log.d(TAG, "Navigating to detail for plant ID: ${plant.id}")
                             onNavigateToDetail(plant.id)
-                            // Send intent *after* triggering navigation if needed,
-                            // or handle selection in ViewModel based on navigation event
-                            // viewModel.handleIntent(PlantsIntent.SelectPlant(plant.id))
                         }
                     ) {
                         Column(
@@ -198,17 +185,17 @@ fun PlantsListScreen(
                                 text = plant.name,
                                 style = MaterialTheme.typography.titleLarge
                             )
-                            Spacer(modifier = Modifier.height(4.dp)) // Reduced spacer
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = plant.species,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant // Softer color
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = plant.description,
                                 style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 3 // Limit description lines in list
+                                maxLines = 3
                             )
                         }
                     }
@@ -220,50 +207,40 @@ fun PlantsListScreen(
 
 @Composable
 fun PlantDetailScreen(
-    viewModel: PlantsViewModel, // Receive ViewModel
-    plantId: Int?, // Receive ID from NavHost argument
-    onNavigateBack: () -> Unit // Lambda to navigate up within the inner NavHost
+    viewModel: PlantsViewModel,
+    plantId: Int?,
+    onNavigateBack: () -> Unit
 ) {
     val TAG = "PlantDetailScreen"
-    val state by viewModel.state.collectAsState() // Observe state
+    val state by viewModel.state.collectAsState()
 
-    // Select the plant when the screen is composed or plantId changes
     LaunchedEffect(plantId) {
         if (plantId != null) {
             Log.d(TAG, "Selecting plant with ID: $plantId")
             viewModel.handleIntent(PlantsIntent.SelectPlant(plantId))
         } else {
             Log.w(TAG, "Plant ID is null, cannot select plant.")
-            // Optionally navigate back if ID is unexpectedly null
-            // onNavigateBack()
         }
     }
 
-    // Use DisposableEffect for cleanup if needed when leaving the detail screen
     DisposableEffect(Unit) {
         onDispose {
             Log.d(TAG, "Disposing PlantDetailScreen, clearing selection in ViewModel")
-            // Deselect plant when navigating away from detail? Optional.
-            // viewModel.handleIntent(PlantsIntent.DeselectPlant)
         }
     }
 
-    // Main content column
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp) // Padding for the detail content
+            .padding(16.dp)
     ) {
         state.selectedPlant?.let { plant ->
             if (plant.id != plantId && plantId != null) {
-                // State might briefly hold the wrong plant if selection is async
-                // Show loading or placeholder while the correct plant loads
                 Log.d(TAG, "Waiting for correct plant data (ID: $plantId)")
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else {
-                // Plant data is ready and matches the requested ID
                 Log.d(TAG, "Displaying details for plant: ${plant.name} (ID: ${plant.id})")
                 Text(
                     text = plant.name,
@@ -307,8 +284,7 @@ fun PlantDetailScreen(
                 )
             }
         } ?: run {
-            // Handle case where selectedPlant is null (e.g., after error or initial load)
-            if (plantId != null && !state.isLoading) { // Avoid showing "not found" during load
+            if (plantId != null && !state.isLoading) {
                 Log.w(TAG, "Plant with ID $plantId not found in state.")
                 Text("Plant not found")
             } else if (!state.isLoading) {
@@ -316,16 +292,13 @@ fun PlantDetailScreen(
                 Text("No plant selected")
             } else {
                 Log.d(TAG, "Selected plant is null, likely loading.")
-                // Optionally show loading indicator here too
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f)) // Push button to bottom
+        Spacer(modifier = Modifier.weight(1f))
 
-        // Button is less critical now as TopAppBar handles back navigation
-        // Keep it for explicit action if desired, or remove it.
         Button(
-            onClick = onNavigateBack, // Navigates up within the inner NavHost
+            onClick = onNavigateBack,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Back to List")
