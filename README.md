@@ -38,8 +38,8 @@ This approach abstracts the dynamic installation complexity away from the main a
 * **Language:** Kotlin
 * **UI Toolkit:** Jetpack Compose
 * **Build System:** Gradle with Kotlin DSL (`build.gradle.kts`)
-* **Architecture:** Multi-module, MVVM/MVI (inferred), Dynamic Feature Modules
-* **Dependency Injection:** Hilt (inferred from plugin usage)
+* **Architecture:** Multi-module, MVVM/MVI , Dynamic Feature Modules
+* **Dependency Injection:** Hilt  
 * **Dynamic Delivery:** Play Feature Delivery
 
 ## Project Structure

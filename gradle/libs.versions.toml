@@ -38,7 +38,7 @@ featureDelivery = "2.1.0"
 kotlinxCoroutines = "1.8.0" # Example: Consolidate coroutines versions if possible
 multidex = "2.0.1"
 
-featureflow = "5.9.4"
+featureflow = "6.0.7"
 
 # --- Deprecated/Redundant ---
 # gradle = "8.5.2" # Refers to Gradle Tooling, not needed here usually
