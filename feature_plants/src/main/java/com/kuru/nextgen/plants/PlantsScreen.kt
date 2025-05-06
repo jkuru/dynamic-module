@@ -1,5 +1,6 @@
 package com.kuru.nextgen.plants
 
+import android.app.Activity
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -86,7 +87,8 @@ fun PlantsFeatureScreen(
                         if (innerNavController.popBackStack()) {
                             Log.d(TAG, "Navigated up within inner NavController")
                         } else {
-                            Log.d(TAG, "No inner back stack, popping to main graph")
+                            Log.d(TAG, "Calling main NavController destination")
+                            (innerNavController.context as? Activity)?.finish()
                         }
                     }) {
                         Icon(

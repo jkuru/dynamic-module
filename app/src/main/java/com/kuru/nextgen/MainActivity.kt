@@ -16,6 +16,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -83,12 +84,16 @@ fun MainScreen(
                 CarsScreen(navController)
             }
             composable("plants") {
-                val intent: Intent = Intent(
-                    navController.context,
-                    DFComponentActivity::class.java
-                )
-                intent.putExtra("uri", "/chase/df/route/feature_plants")
-                navController.context.startActivity(intent)
+                LaunchedEffect(Unit) {
+                    // Pop the plants route to prevent relaunching on resume
+                    navController.popBackStack()
+                    val intent = Intent(
+                        navController.context,
+                        DFComponentActivity::class.java
+                    )
+                    intent.putExtra("uri", "/chase/df/route/feature_plants")
+                    navController.context.startActivity(intent)
+                }
             }
         }
     }
