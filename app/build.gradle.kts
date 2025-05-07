@@ -12,7 +12,7 @@ android {
     namespace = "com.kuru.nextgen"
     compileSdk = 34 // Correct
 
-    val versionMajor = 87
+    val versionMajor = 90
     val versionMinor = 1
     val versionPatch = 0
 
