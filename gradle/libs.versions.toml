@@ -38,13 +38,13 @@ featureDelivery = "2.1.0"
 kotlinxCoroutines = "1.8.0" # Example: Consolidate coroutines versions if possible
 multidex = "2.0.1"
 
-featureflow = "6.0.7"
+featureflow = "7.0.1"
 
 # --- Deprecated/Redundant ---
 # gradle = "8.5.2" # Refers to Gradle Tooling, not needed here usually
 gson = "2.12.1" # Keep if used directly, otherwise remove if unused
 # featureflow = "2.0.0" # Keep if used directly
-corePlay = "1.10.3" # Keep if used directly
+#corePlay = "1.10.3" # Keep if used directly
 appcompat = "1.7.0" # Keep if used directly (View system)
 
 [libraries]
@@ -102,7 +102,7 @@ play-feature-delivery-ktx = { group = "com.google.android.play", name = "feature
 # --- Potentially Unused / Keep if needed ---
 featureflow = { module = "com.kuru:featureflow", version.ref = "featureflow" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
-corePlayLib = { group = "com.google.android.play", name = "core", version.ref = "corePlay" }
+#corePlayLib = { group = "com.google.android.play", name = "core", version.ref = "corePlay" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" } # Needed for View system compatibility
 
 [plugins]
